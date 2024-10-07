@@ -1,50 +1,67 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 import numpy as np
 
+# Load the dataset
 HouseDF = pd.read_csv('USA_Housing.csv')
 
-X = HouseDF[['Avg. Area Income']]
+# Select multiple features for the model
+X = HouseDF[['Avg. Area Income', 'Avg. Area House Age', 'Avg. Area Number of Rooms', 
+             'Avg. Area Number of Bedrooms', 'Area Population']]
 Y = HouseDF['Price']
 
-plt.scatter(X, Y)
-plt.xlabel('Avg. Area Income')
-plt.ylabel('Price')
-plt.title('Avg. Area Income vs. House Price')
+# Train-Test Split
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+# Feature Scaling
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train the Linear Regression model
+linear_model = LinearRegression()
+linear_model.fit(X_train_scaled, Y_train)
+
+# Make predictions using Linear Regression
+linear_predictions = linear_model.predict(X_test_scaled)
+
+
+# Evaluate Linear Regression
+mae_linear = metrics.mean_absolute_error(Y_test, linear_predictions)
+mse_linear = metrics.mean_squared_error(Y_test, linear_predictions)
+rmse_linear = np.sqrt(mse_linear)
+r2_linear = metrics.r2_score(Y_test, linear_predictions)
+
+# Output the performance metrics
+print('Linear Regression:')
+print('Mean Absolute Error (MAE):', mae_linear)
+print('Mean Squared Error (MSE):', mse_linear)
+print('Root Mean Squared Error (RMSE):', rmse_linear)
+print('R² Score:', r2_linear)
+
+# Visualizing feature importance from Random Forest
+plt.figure(figsize=(10, 6))
+feature_importance = rf_model.feature_importances_
+features = X.columns
+plt.barh(features, feature_importance)
+plt.xlabel('Feature Importance')
+plt.ylabel('Features')
+plt.title('Feature Importance in Random Forest')
 plt.show()
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-model = LinearRegression()
-model.fit(X_scaled, Y)
-
-HouseDF1 = pd.read_csv('example_housing_data.csv')
-X_test_new = HouseDF1[['Avg. Area Income']]
-Y_test_new = HouseDF1['Price']
-
-X_test_new_scaled = scaler.transform(X_test_new)
-predictions = model.predict(X_test_new_scaled)
-
-mae = metrics.mean_absolute_error(Y_test_new, predictions)
-mse = metrics.mean_squared_error(Y_test_new, predictions)
-rmse = np.sqrt(mse)
-r2_score = metrics.r2_score(Y_test_new, predictions)
-
-mean_price = Y_test_new.mean()
-accuracy_percentage = (1 - mae / mean_price) * 100
-
-print('Mean Absolute Error (MAE):', mae)
-print('Mean Squared Error (MSE):', mse)
-print('Root Mean Squared Error (RMSE):', rmse)
-print('R^2 Score:', r2_score)
-print('Accuracy (as percentage):', accuracy_percentage)
-
+# Prediction based on user input
 income = float(input("Enter the average area income to predict house price: "))
-scaled_income = scaler.transform([[income]])
-predicted_price = model.predict(scaled_income)
+age = float(input("Enter the average house age to predict house price: "))
+rooms = float(input("Enter the average number of rooms to predict house price: "))
+bedrooms = float(input("Enter the average number of bedrooms to predict house price: "))
+population = float(input("Enter the area population to predict house price: "))
 
-print(f"The predicted house price for an average area income of {income} is: ${predicted_price[0]:,.2f}")
+user_input = np.array([[income, age, rooms, bedrooms, population]])
+user_input_scaled = scaler.transform(user_input)
+predicted_price = linear_model.predict(user_input_scaled)
+
+print(f"The predicted house price for the given input is: ${predicted_price[0]:,.2f}")
